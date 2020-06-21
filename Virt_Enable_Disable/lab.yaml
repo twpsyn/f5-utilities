@@ -1,0 +1,14 @@
+---
+- devs:
+  - "big-ip-1"
+  - "big-ip-2"
+  virts:
+  - "lb-srv"
+  - "lb-srv-https"
+  dgrp: Lab-DG
+- devs:
+  - "big-ip-2"
+  - "big-ip-1"
+  virts:
+  - "lb-srv-auth"
+  dgrp: Lab-DG

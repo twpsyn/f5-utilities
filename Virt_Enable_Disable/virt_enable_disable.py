@@ -4,6 +4,7 @@ import yaml
 import getpass
 from f5.bigip import ManagementRoot
 from time import sleep
+from requests.exceptions import HTTPError, ConnectionError
 
 
 def connect(devs, user, password):
@@ -12,13 +13,28 @@ def connect(devs, user, password):
         return mgmt
     else:
         for dev in devs:
+            print(f"Attempting to connect to {dev}")
             try:
                 mgmt = ManagementRoot(dev, user, password)
-            except Exception:  # because lazy
-                print(f"Unable to connect to {dev}")
+            except HTTPError as e:
+                print(
+                        "HTTPError: Received HTTP Error "
+                        f"{e.response.status_code} - {e.response.reason}."
+                    )
+                if e.response.status_code == 401:
+                    print("\nAuthentication failed. Aborting.")
+                    print("Please check username and password.\n")
+                    exit(1)
+                else:
+                    next
+            except ConnectionError:
+                print("ConnectionError: Unable to connect.")
+                next
+            except Exception:
+                print(f"Exception: Unhandled exception when connecting to {dev}.")
                 next
             else:
-                print(f"Connected to {dev}")
+                print("Connected.")
                 return mgmt
         print("\nUnable to connect to any device.")
         print("Check device statuses, dns resolution, and credentials.\n")

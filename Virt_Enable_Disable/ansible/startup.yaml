@@ -1,0 +1,54 @@
+---
+- name: Startup
+  hosts: all
+  gather_facts: false
+  connection: local
+  collections:
+  - f5networks.f5_modules
+
+  vars_prompt:
+    - name: username
+      prompt: "Enter F5 Username"
+      private: no
+      default: "{{ lookup('env','USER') }}"
+    - name: password
+      prompt: "Enter F5 Password"
+
+  vars:
+    F5Provider:
+      server: "{{ ansible_host }}"
+      user: "{{ username }}"
+      password: "{{ password }}"
+      validate_certs: no
+
+  tasks:
+  
+    - name: Get failover status
+      bigip_command:
+        provider: "{{ F5Provider }}"
+        commands:
+          - "tmsh show sys failover"
+      register: failoverStatus
+  
+    - name: Executing on Active member
+      block:
+      
+      - name: Enable Virtual Servers
+        bigip_virtual_server:
+          provider: "{{ F5Provider }}"
+          name: "{{ item.name }}"
+          state: enabled
+        loop: "{{ virtual_servers }}"
+      
+      - name: Sync Device to Group
+        bigip_configsync_action:
+          provider: "{{ F5Provider }}"
+          device_group: "{{ dev_group }}"
+          sync_device_to_group: yes
+      
+      when: "'active' in failoverStatus['stdout'][0]"
+    
+    - name: Save Configs
+      bigip_config:
+        provider: "{{ F5Provider }}"
+        save: yes

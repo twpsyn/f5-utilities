@@ -3,6 +3,7 @@ import argparse
 import yaml
 import getpass
 from f5.bigip import ManagementRoot
+from f5.utils.responses.handlers import Stats
 from time import sleep
 
 
@@ -31,13 +32,16 @@ def print_states(virtual_servers):
     for virt in virtual_servers:
         myvirt = mgmt.tm.ltm.virtuals.virtual.load(name=virt)
         if myvirt.to_dict().get("enabled"):
-            state = "Enabled"
+            confstate = "Enabled"
         elif myvirt.to_dict().get("disabled"):
-            state = "Disabled"
+            confstate = "Disabled"
         else:
-            state = "UNKNOWN"
+            confstate = "UNKNOWN"
 
-        print(f"- {virt}: {state}")
+        virtstats = Stats(myvirt.stats.load())
+        operstate = virtstats.stat['status_availabilityState']['description']
+
+        print(f"- {virt}: {confstate} ({operstate})")
     print("")
 
 

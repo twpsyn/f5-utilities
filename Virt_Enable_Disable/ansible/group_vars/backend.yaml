@@ -1,0 +1,4 @@
+---
+dev_group: "LAB-DG"
+virtual_servers:
+  - name: "lb-srv-auth"

@@ -1,0 +1,5 @@
+---
+dev_group: "LAB-DG"
+virtual_servers:
+  - name: "lb-srv"
+  - name: "lb-srv-https"

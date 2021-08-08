@@ -49,15 +49,22 @@ def print_states(virtual_servers):
         myvirt = mgmt.tm.ltm.virtuals.virtual.load(name=virt)
         if myvirt.to_dict().get("enabled"):
             confstate = "Enabled"
+            txt_colour = "\033[32m"  # Green
         elif myvirt.to_dict().get("disabled"):
             confstate = "Disabled"
+            txt_colour = "\033[31m"  # Red
         else:
             confstate = "UNKNOWN"
+            txt_colour = "\033[34m"  # Blue
 
         virtstats = Stats(myvirt.stats.load())
         operstate = virtstats.stat['status_availabilityState']['description']
+        if operstate == 'offline':
+            txt_colour = "\033[31m"  # Red
+        elif confstate != 'Disabled' and operstate == 'unknown':
+            txt_colour = "\033[34m"  # Blue
 
-        print(f"- {virt}: {confstate} ({operstate})")
+        print(f"- {virt}: {txt_colour}{confstate} ({operstate}) \033[0m")
     print("")
 
 
@@ -147,10 +154,9 @@ if __name__ == "__main__":
             s_status = get_sync_status(mgmt)
             print(f"\nSync status: {s_status}")
 
-            if not printonly:
-                if s_status != "green":
-                    print("\nCluster is not synchronised. Please check sync status.\n")
-                    exit(1)
+            if not printonly and s_status != "green":
+                print("\nCluster is not synchronised. Please check sync status.\n")
+                exit(1)
 
         print_states(cluster["virts"])
 
